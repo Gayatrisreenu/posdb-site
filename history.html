@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POSB — Transaction History</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="sidebar" class="sidebar"></div>
+
+<div class="main">
+  <div id="topbar" class="topbar"></div>
+
+  <div class="content" style="display:block;">
+    <div class="card history-card">
+      <h2>Transaction History</h2>
+
+      <!-- Add form — all fields visible; submission is intentionally disabled -->
+      <div style="background:#f9fafb;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px;">
+        <div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.04em;">Add Transaction</div>
+        <div class="form-grid">
+          <input id="fDate"   class="inp" type="date">
+          <input id="fCode"   class="inp" placeholder="Transaction Code">
+          <input id="fDesc"   class="inp" placeholder="Description">
+          <input id="fRef1"   class="inp" placeholder="Ref 1">
+          <input id="fRef2"   class="inp" placeholder="Ref 2">
+          <input id="fRef3"   class="inp" placeholder="Ref 3">
+          <input id="fStatus" class="inp" placeholder="Status (e.g. Completed)">
+          <input id="fDebit"  class="inp" type="number" placeholder="Debit Amount">
+          <input id="fCredit" class="inp" type="number" placeholder="Credit Amount">
+          <button class="btn-primary" onclick="addTransaction()">+ Add Transaction</button>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Code</th>
+              <th>Description</th>
+              <th>Ref 1</th>
+              <th>Ref 2</th>
+              <th>Ref 3</th>
+              <th>Status</th>
+              <th>Debit (SGD)</th>
+              <th>Credit (SGD)</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+        <div id="emptyHistory" style="display:none;padding:32px;text-align:center;color:#9ca3af;font-size:13px;">No transactions yet</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer" id="pageFooter"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/app.js"></script>
+<script>
+  checkLogin();
+  buildSidebar("History");
+  buildTopbar("Transaction History");
+  buildFooter();
+
+  function statusBadge(s){
+    if(!s||s==="-") return `<span style="color:#9ca3af">—</span>`;
+    const lower = s.toLowerCase();
+    const cls = lower.includes("complet")||lower.includes("success") ? "status-success"
+              : lower.includes("pend") ? "status-pending" : "status-failed";
+    return `<span class="status-badge ${cls}">${s}</span>`;
+  }
+
+  function loadHistory(){
+    const data = getTransactions();
+    const body = document.getElementById("historyBody");
+    const empty = document.getElementById("emptyHistory");
+
+    if(!data.length){
+      body.innerHTML = "";
+      empty.style.display = "block";
+      return;
+    }
+
+    empty.style.display = "none";
+    body.innerHTML = [...data].reverse().map((t,ri)=>{
+      const i = data.length - 1 - ri;
+      const dAmt = t.debit  ? `<span style="color:var(--red);font-weight:600;">${fmt(t.debit)}</span>`  : `<span style="color:#9ca3af">—</span>`;
+      const cAmt = t.credit ? `<span style="color:var(--green);font-weight:600;">${fmt(t.credit)}</span>` : `<span style="color:#9ca3af">—</span>`;
+      return `
+        <tr>
+          <td>${t.date||"—"}</td>
+          <td style="font-family:monospace;font-size:12px;">${t.code||"—"}</td>
+          <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.desc||t.name||"—"}</td>
+          <td>${t.ref1||"—"}</td>
+          <td>${t.ref2||"—"}</td>
+          <td>${t.ref3||"—"}</td>
+          <td>${statusBadge(t.status)}</td>
+          <td>${dAmt}</td>
+          <td>${cAmt}</td>
+          <td>
+            <button class="btn-primary btn-danger" style="padding:5px 10px;font-size:11.5px;" onclick="deleteTx(${i})">Delete</button>
+          </td>
+        </tr>`;
+    }).join("");
+  }
+
+  /* ── DISABLED: Add Transaction does not write any record or change balance ── */
+  function addTransaction(){
+    // All input fields remain visible and editable.
+    // Clicking "+ Add Transaction" is intentionally a no-op.
+    return;
+  }
+
+  /* ── DISABLED: Delete also blocked so existing seed data stays intact ── */
+  function deleteTx(i){
+    // Delete button is visible but intentionally a no-op.
+    return;
+  }
+
+  loadHistory();
+</script>
+</body>
+</html>

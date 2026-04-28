@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POSB — Home</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="sidebar" class="sidebar"></div>
+
+<div class="main">
+  <div id="topbar" class="topbar"></div>
+
+  <!-- PAGE TABS -->
+  <div class="page-tabs">
+    <div class="page-tab active" onclick="setTab(this)">Overview</div>
+    <div class="page-tab" onclick="setTab(this)">Manage</div>
+  </div>
+
+  <div class="content" style="display:grid; grid-template-columns:1fr 320px; gap:18px; align-content:start;">
+
+    <!-- LEFT: Transaction History -->
+    <div class="card">
+      <div class="txn-card-header">
+        <h3>Transaction History</h3>
+        <div class="header-icons">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="Download">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="Filter">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Month filter -->
+      <div class="month-filter">
+        <div class="arrow" style="cursor:pointer; color:var(--text-muted);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </div>
+        <div class="month-pill" onclick="selectMonth(this,'Nov')">Nov</div>
+        <div class="month-pill" onclick="selectMonth(this,'Dec 2025')">Dec 2025</div>
+        <div class="month-pill" onclick="selectMonth(this,'Jan')">Jan</div>
+        <div class="month-pill" onclick="selectMonth(this,'Feb')">Feb</div>
+        <div class="month-pill active" onclick="selectMonth(this,'Mar')">Mar</div>
+        <div class="month-pill" onclick="selectMonth(this,'Pending')">Pending</div>
+        <div class="month-pill" onclick="selectMonth(this,'Declined')">Declined</div>
+        <div class="arrow" style="cursor:pointer; color:var(--text-muted);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div style="padding:0 22px 12px;">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" placeholder="Search transactions" oninput="filterTxns(this.value)">
+        </div>
+      </div>
+
+      <div class="txn-date-header" id="dateLabel">Mar 2026</div>
+      <div class="txn-list-wrap" id="txnList"></div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div style="display:flex; flex-direction:column; gap:18px;">
+
+      <!-- Quick Actions -->
+      <div class="card" style="padding:16px 14px 14px;">
+        <div style="font-size:14px;font-weight:600;margin-bottom:12px;padding:0 4px;">Quick Actions</div>
+        <div class="qa-grid">
+          <div class="qa-btn" onclick="location.href='transfer.html'">
+            <div class="qa-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14"/><path d="M12 5l7 7-7 7"/>
+              </svg>
+            </div>
+            <div class="qa-label">Local transfer</div>
+          </div>
+          <div class="qa-btn" onclick="location.href='dashboard.html'">
+            <div class="qa-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+              </svg>
+            </div>
+            <div class="qa-label">Bills &amp; GIRO</div>
+          </div>
+          <div class="qa-btn">
+            <div class="qa-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+              </svg>
+            </div>
+            <div class="qa-label">Exchange Currency</div>
+          </div>
+          <div class="qa-btn">
+            <div class="qa-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+            </div>
+            <div class="qa-label">eDocuments</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account Summary -->
+      <div class="card">
+        <div class="summary-card">
+          <h3>Account Summary</h3>
+          <div style="margin-bottom:4px;">
+            <div style="font-size:11px;color:#9ca3af;margin-bottom:2px;">POSB Passbook Savings · 153-53187-0</div>
+          </div>
+          <div class="summary-row">
+            <div class="summary-label">Total Balance <div class="info-dot">i</div></div>
+            <div></div>
+          </div>
+          <div class="summary-row" style="padding-top:2px;">
+            <div style="font-size:11px;color:#9ca3af;">SGD</div>
+            <div class="summary-value big" id="totalBalance">—</div>
+          </div>
+          <div class="summary-row" style="margin-top:6px;">
+            <div class="summary-label">Available Balance</div>
+            <div class="summary-value" id="availBalance">—</div>
+          </div>
+          <div class="summary-row">
+            <div class="summary-label">Earmarked Funds <div class="info-dot">i</div></div>
+            <div class="summary-value" id="holdBalance">SGD 42.52</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Linked Card -->
+      <div class="card">
+        <div class="linked-card">
+          <div class="card-chip"><div class="card-chip-inner"></div></div>
+          <div class="card-details">
+            <div class="card-name">POSB Debit Card</div>
+            <div class="card-num">**** **** **** 9004</div>
+          </div>
+          <div class="card-type-badge">Debit</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="page-footer" id="pageFooter"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/app.js"></script>
+<script>
+  checkLogin();
+  buildSidebar("Home");
+  buildTopbar("POSB Passbook Savings Account", "153-53187-0");
+  buildFooter();
+
+  // Render txns
+  let allTxns = getTransactions();
+
+  const iconMap = {
+    smrt:   { bg:"#fff0f0", emoji:"🚌" },
+    salary: { bg:"#f0fdf4", emoji:"🏢" },
+    shop:   { bg:"#eff6ff", emoji:"🛍️" },
+    sub:    { bg:"#faf5ff", emoji:"🎬" },
+    util:   { bg:"#fffbeb", emoji:"⚡" },
+    ride:   { bg:"#f0fdf4", emoji:"🚗" },
+  };
+
+  function renderTxns(list){
+    const el = document.getElementById("txnList");
+    if(!list.length){
+      el.innerHTML = `<div style="padding:32px;text-align:center;color:#9ca3af;font-size:13px;">No transactions found</div>`;
+      return;
+    }
+    el.innerHTML = list.map(t=>{
+      const ic = iconMap[t.icon] || { bg:"#f3f4f6", emoji:"💳" };
+      const amt = t.credit
+        ? `<div class="txn-amount credit">+ SGD ${fmt(t.credit)}</div>`
+        : `<div class="txn-amount debit">− SGD ${fmt(t.debit)}</div>`;
+      return `
+        <div class="txn-row">
+          <div class="txn-avatar" style="background:${ic.bg};">${ic.emoji}</div>
+          <div class="txn-info">
+            <div class="txn-name">${t.name}</div>
+            <div class="txn-ref">${t.desc || t.code || "Transaction"}</div>
+          </div>
+          ${amt}
+        </div>`;
+    }).join("");
+  }
+
+  function filterTxns(q){
+    const lq = q.toLowerCase();
+    renderTxns(lq ? allTxns.filter(t=>
+      t.name.toLowerCase().includes(lq) || (t.desc||"").toLowerCase().includes(lq)
+    ) : allTxns);
+  }
+
+  function selectMonth(el, label){
+    document.querySelectorAll(".month-pill").forEach(p=>p.classList.remove("active"));
+    el.classList.add("active");
+    const noYear = ["Nov","Pending","Declined"];
+    const fullYear = ["Dec 2025"];
+    if(fullYear.includes(label)){
+      document.getElementById("dateLabel").textContent = label;
+    } else if(noYear.includes(label)){
+      document.getElementById("dateLabel").textContent = label;
+    } else {
+      document.getElementById("dateLabel").textContent = label + " 2026";
+    }
+  }
+
+  function setTab(el){
+    document.querySelectorAll(".page-tab").forEach(t=>t.classList.remove("active"));
+    el.classList.add("active");
+  }
+
+  // Load balance
+  (function(){
+    const bal = getBalance();
+    document.getElementById("totalBalance").textContent = fmt(bal);
+    document.getElementById("availBalance").textContent = "SGD " + fmt(bal - 42.52);
+  })();
+
+  renderTxns(allTxns);
+</script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POSB — Transfer</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="sidebar" class="sidebar"></div>
+
+<div class="main">
+  <div id="topbar" class="topbar"></div>
+
+  <div class="content" style="display:flex; justify-content:center; align-items:flex-start; padding-top:32px;">
+    <div style="width:100%;max-width:520px;">
+
+      <!-- Back button -->
+      <div onclick="history.back()" style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted);cursor:pointer;margin-bottom:18px;width:fit-content;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </div>
+
+      <div class="card transfer-card">
+        <h2>Make a Transfer</h2>
+
+        <!-- Transfer type -->
+        <div class="field-group" style="margin-bottom:20px;">
+          <label class="field-label">Transfer Type</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="service-item active-type" id="typeLocal" onclick="setType('local')" style="flex-direction:row;gap:8px;justify-content:center;padding:12px 8px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="8" width="18" height="12" rx="2"/><path d="M7 8V6a5 5 0 0 1 10 0v2"/>
+              </svg>
+              <span style="font-size:13px;font-weight:500;">Local</span>
+            </div>
+            <div class="service-item" id="typePaynow" onclick="setType('paynow')" style="flex-direction:row;gap:8px;justify-content:center;padding:12px 8px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/>
+                <line x1="12" y1="8" x2="12" y2="16"/>
+              </svg>
+              <span style="font-size:13px;font-weight:500;">PayNow</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">To (Recipient)</label>
+          <select id="recSelect" class="select-inp">
+            <option value="">— Select recipient —</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Reference / Remarks</label>
+          <input id="txRef" class="inp" type="text" placeholder="Optional message to recipient">
+        </div>
+
+        <div class="field-group" style="margin-bottom:22px;">
+          <label class="field-label">Amount</label>
+          <div class="amount-field-wrap">
+            <span class="currency-prefix">SGD</span>
+            <input id="txAmount" class="amount-inp" type="number" placeholder="0.00" min="0.01" step="0.01">
+          </div>
+          <div style="margin-top:6px;font-size:12px;color:var(--text-muted);">
+            Available balance: <strong id="availBal">—</strong>
+          </div>
+        </div>
+
+        <button class="send-btn" onclick="sendMoney()">
+          <span id="sendBtnText">Send Money →</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="page-footer" id="pageFooter"></div>
+</div>
+
+<!-- Success modal (kept in DOM but never triggered) -->
+<div id="successModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:500;
+  align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:36px 32px;max-width:360px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <div style="width:60px;height:60px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px;">Transfer Successful!</div>
+    <div id="successMsg" style="font-size:13.5px;color:var(--text-muted);margin-bottom:24px;"></div>
+    <button class="btn-primary" style="width:100%;" onclick="location.href='home.html'">Back to Home</button>
+    <div style="margin-top:10px;"><a href="history.html" style="font-size:13px;color:var(--blue);text-decoration:none;">View transaction history</a></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/app.js"></script>
+<script>
+  checkLogin();
+  buildSidebar("Pay & Transfer");
+  buildTopbar("Make a Transfer");
+  buildFooter();
+
+  let transferType = "local";
+
+  function setType(type){
+    transferType = type;
+    document.getElementById("typeLocal").style.borderColor  = type==="local"  ? "var(--blue)" : "var(--border)";
+    document.getElementById("typePaynow").style.borderColor = type==="paynow" ? "var(--blue)" : "var(--border)";
+    document.getElementById("typeLocal").style.background   = type==="local"  ? "var(--blue-light)" : "#fff";
+    document.getElementById("typePaynow").style.background  = type==="paynow" ? "var(--blue-light)" : "#fff";
+  }
+
+  setType("local");
+
+  // Load recipients dropdown
+  (function(){
+    const sel = document.getElementById("recSelect");
+    const recs = getRecipients();
+    recs.forEach((r,i)=>{
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = `${r.name} — ${r.acc}`;
+      sel.appendChild(opt);
+    });
+
+    // Pre-select if coming from recipients page
+    const presel = localStorage.getItem("posb_selected");
+    if(presel !== null) sel.value = presel;
+    localStorage.removeItem("posb_selected");
+
+    // Balance
+    const bal = getBalance();
+    document.getElementById("availBal").textContent = "SGD " + fmt(bal);
+  })();
+
+  /* ── DISABLED: Send Money does not save any transaction or change balance ── */
+  function sendMoney(){
+    // All form fields (recipient, reference, amount) remain visible and editable.
+    // Clicking "Send Money" is intentionally a no-op — no data is written.
+    return;
+  }
+</script>
+</body>
+</html>

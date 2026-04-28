@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POSB — Recipients</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="sidebar" class="sidebar"></div>
+
+<div class="main">
+  <div id="topbar" class="topbar"></div>
+
+  <div class="content" style="display:grid; grid-template-columns:1fr 380px; gap:18px; align-content:start;">
+
+    <!-- LEFT: recipient list -->
+    <div class="card">
+      <div style="padding:18px 22px 0;">
+        <h3 style="font-size:15px;font-weight:600;margin-bottom:14px;">All Recipients &amp; Billers</h3>
+        <div class="search-box" style="margin-bottom:0;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="recSearch" placeholder="Search by name or account" oninput="searchRec(this.value)">
+        </div>
+      </div>
+
+      <div class="rec-tabs">
+        <div class="rec-tab active" onclick="setTab(this,'all')">All <span class="count" id="cntAll">0</span></div>
+        <div class="rec-tab" onclick="setTab(this,'favourites')">Favourites <span class="count" id="cntFav">0</span></div>
+      </div>
+
+      <div id="recList"></div>
+    </div>
+
+    <!-- RIGHT: Add recipient -->
+    <div class="card" style="padding:22px;">
+      <h3 style="font-size:15px;font-weight:600;margin-bottom:18px;">Add New Recipient</h3>
+
+      <div class="field-group">
+        <label class="field-label">Full Name</label>
+        <input id="rName" class="inp" type="text" placeholder="Recipient name">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Account / Phone Number</label>
+        <input id="rAcc" class="inp" type="text" placeholder="Account or mobile number">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Bank / Transfer Type</label>
+        <input id="rBank" class="inp" type="text" placeholder="e.g. DBS Savings Account">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Transfer Type</label>
+        <select id="rType" class="select-inp">
+          <option value="local">Local Transfer</option>
+          <option value="paynow">PayNow</option>
+          <option value="remit">DBS Remit (Overseas)</option>
+        </select>
+      </div>
+
+      <button class="btn-primary" style="width:100%;" onclick="addRecipient()">Add Recipient</button>
+    </div>
+
+  </div>
+
+  <div class="page-footer" id="pageFooter"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/app.js"></script>
+<script>
+  checkLogin();
+  buildSidebar("Recipients");
+  buildTopbar("Recipients");
+  buildFooter();
+
+  let currentTab = "all";
+
+  function setTab(el, type){
+    document.querySelectorAll(".rec-tab").forEach(t=>t.classList.remove("active"));
+    el.classList.add("active");
+    currentTab = type;
+    renderList();
+  }
+
+  function searchRec(q){
+    const lq = q.toLowerCase();
+    const all = getRecipients();
+    const base = currentTab==="favourites" ? all.filter(r=>r.fav) : all;
+    renderList(lq ? base.filter(r=>r.name.toLowerCase().includes(lq)||r.acc.toLowerCase().includes(lq)) : null);
+  }
+
+  const BADGE = {
+    remit:  `<span class="rec-badge badge-remit">DBS REMIT</span>`,
+    paynow: `<span class="rec-badge badge-paynow">PAYNOW</span>`,
+    local:  `<span class="rec-badge badge-local">LOCAL</span>`,
+  };
+
+  function renderList(override){
+    const all = getRecipients();
+    const list = override !== undefined ? override :
+      (currentTab==="favourites" ? all.filter(r=>r.fav) : all);
+
+    document.getElementById("cntAll").textContent = all.length;
+    document.getElementById("cntFav").textContent = all.filter(r=>r.fav).length;
+
+    const el = document.getElementById("recList");
+    if(!list.length){
+      el.innerHTML = `<div style="padding:28px;text-align:center;color:#9ca3af;font-size:13px;">No recipients found</div>`;
+      return;
+    }
+
+    el.innerHTML = list.map((r,i)=>{
+      const realIdx = getRecipients().indexOf(r);
+      const color = avatarColor(r.name);
+      const badge = BADGE[r.type] || "";
+      return `
+        <div class="rec-row">
+          <div class="rec-avatar" style="background:${color};">${initials(r.name)}</div>
+          <div class="rec-info">
+            <div class="rec-name">${r.name}</div>
+            <div class="rec-sub">${r.bank||""}, ${r.acc}</div>
+          </div>
+          ${badge}
+          <button class="btn-primary" style="padding:7px 14px;font-size:12px;flex-shrink:0;"
+            onclick="payRec(${realIdx !== -1 ? realIdx : i})">Pay</button>
+          <div class="rec-menu" onclick="toggleFav(${realIdx !== -1 ? realIdx : i});" title="${r.fav?'Remove favourite':'Add favourite'}">
+            <svg width="15" height="15" viewBox="0 0 24 24"
+              fill="${r.fav?'#f0a500':'none'}" stroke="${r.fav?'#f0a500':'#9ca3af'}" stroke-width="2">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </div>
+          <div class="rec-menu" onclick="deleteRec(${realIdx !== -1 ? realIdx : i});" title="Delete">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6"/><path d="M14 11v6"/>
+            </svg>
+          </div>
+        </div>`;
+    }).join("");
+  }
+
+  function addRecipient(){
+    const name = document.getElementById("rName").value.trim();
+    const acc  = document.getElementById("rAcc").value.trim();
+    const bank = document.getElementById("rBank").value.trim();
+    const type = document.getElementById("rType").value;
+
+    if(!name||!acc){ showToast("Please fill in name and account","error"); return; }
+
+    const all = getRecipients();
+    all.push({ name, acc, bank: bank||"", type, fav:false, created: Date.now() });
+    saveRecipients(all);
+
+    document.getElementById("rName").value = "";
+    document.getElementById("rAcc").value  = "";
+    document.getElementById("rBank").value = "";
+
+    showToast("Recipient added!", "success");
+    renderList();
+  }
+
+  function payRec(i){
+    localStorage.setItem("posb_selected", i);
+    window.location = "transfer.html";
+  }
+
+  function toggleFav(i){
+    const all = getRecipients();
+    all[i].fav = !all[i].fav;
+    saveRecipients(all);
+    renderList();
+    showToast(all[i].fav ? "Added to favourites" : "Removed from favourites");
+  }
+
+  function deleteRec(i){
+    const all = getRecipients();
+    const name = all[i].name;
+    all.splice(i,1);
+    saveRecipients(all);
+    renderList();
+    showToast(`Removed ${name}`);
+  }
+
+  renderList();
+</script>
+</body>
+</html>

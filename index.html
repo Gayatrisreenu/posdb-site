@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POSB — Log In</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="login-page">
+
+<!-- LEFT — background image -->
+<div class="login-bg" style="background-image: url('assets/bg.png');"></div>
+
+<!-- RIGHT — login panel -->
+<div class="login-panel">
+
+  <!-- Logo -->
+  <div class="login-logo-wrap" style="margin-bottom:24px;">
+    <img src="assets/logo.png" class="login-logo-img" alt="POSB"
+      style="height:72px;width:auto;object-fit:contain;border-radius:12px;"
+      onerror="this.style.display='none'; document.getElementById('fallbackLogo').style.display='flex';">
+    <div id="fallbackLogo" style="display:none; align-items:center; gap:10px;">
+      <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" rx="12" fill="#1e4db7"/>
+        <circle cx="38" cy="28" r="22" fill="white"/>
+        <circle cx="38" cy="28" r="13" fill="#1e4db7"/>
+        <circle cx="38" cy="16" r="5" fill="white"/>
+        <circle cx="28" cy="33" r="5" fill="white"/>
+        <circle cx="48" cy="33" r="5" fill="white"/>
+        <rect x="34" y="48" width="8" height="38" rx="3" fill="white"/>
+        <rect x="42" y="56" width="8" height="6" rx="2" fill="white"/>
+        <rect x="42" y="68" width="8" height="6" rx="2" fill="white"/>
+      </svg>
+      <span style="font-size:26px;font-weight:800;color:#f0a500;letter-spacing:1px;">POSB</span>
+    </div>
+  </div>
+
+  <!-- Maintenance notice (optional) -->
+  <div class="maintenance-banner" id="maintenanceBanner" style="display:none;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    <span>Scheduled maintenance in progress. Some services may be temporarily unavailable.</span>
+  </div>
+
+  <div class="login-heading">Welcome back</div>
+  <div class="login-sub">Sign in to your POSB account</div>
+
+  <!-- Fields -->
+  <div class="login-field">
+    <label class="login-label">User ID</label>
+    <input id="userIdInput" class="login-inp" type="text" placeholder="Enter your User ID" autocomplete="username">
+  </div>
+
+  <div class="login-field">
+    <label class="login-label">PIN</label>
+    <input id="pinInput" class="login-inp" type="password" placeholder="Enter your PIN" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter') doLogin()">
+  </div>
+
+  <button class="login-btn" onclick="doLogin()">Log In</button>
+
+  <div class="login-links">
+    <a href="#" class="login-link">Forgot User ID</a>
+    <span class="login-divider">or</span>
+    <a href="#" class="login-link">PIN?</a>
+    &nbsp;·&nbsp;
+    <a href="#" class="login-link">Register for digibank access</a>
+  </div>
+
+  <div class="login-footer">
+    <a href="#" style="color:var(--text-muted); text-decoration:none; margin-right:14px;">Help &amp; Support</a>
+    <a href="#" style="color:var(--text-muted); text-decoration:none;">Security &amp; You</a>
+  </div>
+
+  <!-- Dev helper: force-reset demo data -->
+  <div style="margin-top:18px;padding-top:14px;border-top:1px dashed #e5e7eb;text-align:center;">
+    <button onclick="hardReset()" style="background:none;border:1px solid #e5e7eb;border-radius:7px;padding:7px 16px;font-family:inherit;font-size:12px;color:#9ca3af;cursor:pointer;"
+      onmouseover="this.style.borderColor="#dc2626";this.style.color="#dc2626";"
+      onmouseout="this.style.borderColor="#e5e7eb";this.style.color="#9ca3af";">
+      Reset Demo Data
+    </button>
+    <div style="font-size:11px;color:#9ca3af;margin-top:5px;">Clears cache &amp; reloads with SGD 163,000.83</div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // If already logged in THIS SESSION, redirect
+  if(sessionStorage.getItem("posb_login") === "true") {
+    window.location = "home.html";
+  }
+
+  function doLogin(){
+    const userId = document.getElementById("userIdInput").value.trim();
+    const pin    = document.getElementById("pinInput").value.trim();
+
+    if(!userId){
+      showToast("Please enter your User ID", "error");
+      document.getElementById("userIdInput").focus();
+      return;
+    }
+    if(!pin){
+      showToast("Please enter your PIN", "error");
+      document.getElementById("pinInput").focus();
+      return;
+    }
+
+    // Store login in sessionStorage (clears when tab/browser closes)
+    sessionStorage.setItem("posb_login", "true");
+    sessionStorage.setItem("posb_user", userId);
+    // Also keep user in localStorage for data persistence
+    localStorage.setItem("posb_user", userId);
+
+    // Seed demo data if not already present
+    seedDemoData();
+
+    showToast("Logging in…", "success");
+    setTimeout(()=>{ window.location = "home.html"; }, 600);
+  }
+
+  function seedDemoData(){
+    // Version key — bump this string any time seed data changes, forces a reseed
+    const SEED_VERSION = "v2-163k";
+    if(localStorage.getItem("posb_seeded") !== SEED_VERSION){
+      localStorage.clear(); // wipe stale data
+      const txns = [
+        // April 2026
+        { id:1,  name:"JAPAN HOME (RETAIL)",      code:"POS",   desc:"NETS Contactless",                                    debit:16.50,   credit:null,    date:"2026-04-26", icon:"shop" },
+        { id:2,  name:"BUS/MRT",                  code:"UMC-S", desc:"BUS/MRT 836374684 SI SGP 13APR",                      debit:9.11,    credit:null,    date:"2026-04-22", icon:"smrt" },
+        { id:3,  name:"WIX.COM",                  code:"UMC-S", desc:"WIX.COM 1235959041 SA USA 19APR USD20.71",            debit:27.25,   credit:null,    date:"2026-04-21", icon:"sub" },
+        { id:4,  name:"CAFE O SINGAPORE",         code:"UMC-S", desc:"CAFE O SINGAPORE P* OD SI SGP 17APR",                 debit:13.80,   credit:null,    date:"2026-04-20", icon:"shop" },
+        { id:5,  name:"DAISO JAPAN-WOODLANDS",    code:"UMC-S", desc:"DAISO JAPAN-WOODLANDS SI SGP 16APR",                  debit:8.28,    credit:null,    date:"2026-04-20", icon:"shop" },
+        { id:6,  name:"NTUC FairPrice",           code:"UMC-S", desc:"NTUC FP-WLDS CIVIC PLZ SI SGP 16APR",                 debit:40.61,   credit:null,    date:"2026-04-20", icon:"shop" },
+        { id:7,  name:"IndiGo Air",               code:"UMC-S", desc:"INDIGOAIR SINGAPORE SGP 16APR",                       debit:669.10,  credit:null,    date:"2026-04-20", icon:"ride" },
+        { id:8,  name:"Amazon Retail SG",         code:"UMC-S", desc:"AMAZON RETAIL SG SI SGP 14APR",                       debit:36.95,   credit:null,    date:"2026-04-17", icon:"shop" },
+        { id:9,  name:"GoDaddy",                  code:"UMC-S", desc:"DNH*GODADDY#4063070257 AM NLD 13APR",                 debit:8.47,    credit:null,    date:"2026-04-17", icon:"sub" },
+        { id:10, name:"Amazon Marketplace SG",    code:"UMC-S", desc:"AMAZON MKTPLC SG SI SGP 13APR (Refund)",              debit:null,    credit:37.16,   date:"2026-04-17", icon:"shop" },
+        { id:11, name:"Salary Credit",            code:"SAL",   desc:"Salary - Singapore Sports Business Co.",              debit:null,    credit:18320.00,date:"2026-04-10", icon:"salary" },
+        // March 2026
+        { id:12, name:"Grab",                     code:"UMC-S", desc:"Grab* A-95D84HLWXXDBAV Si SGP 29MAR",                 debit:35.00,   credit:null,    date:"2026-03-31", icon:"ride" },
+        { id:13, name:"Paris Baguette",           code:"UMC-S", desc:"PARIS BAGUETTE -RC SI SGP 27MAR",                    debit:28.40,   credit:null,    date:"2026-03-31", icon:"shop" },
+        { id:14, name:"XW Western Grill",         code:"UMC-S", desc:"XW WESTERN GRILL- RC SI SGP 27MAR",                  debit:54.79,   credit:null,    date:"2026-03-30", icon:"shop" },
+        { id:15, name:"Sengkang Town Council",    code:"IBG",   desc:"SENGKANGTOWNCOUNCIL SN-GDED-0000045319198",           debit:75.00,   credit:null,    date:"2026-03-30", icon:"util" },
+        { id:16, name:"ATM Cash Withdrawal",      code:"CAM",   desc:"35999004,BEDOK CTL BR A",                             debit:null,    credit:1000.00, date:"2026-03-30", icon:"salary" },
+        { id:17, name:"SINGTEL",                  code:"D2P",   desc:"SINGTEL 20260329103844264 D2Pay",                     debit:200.68,  credit:null,    date:"2026-03-29", icon:"util" },
+        { id:18, name:"Grab",                     code:"UMC-S", desc:"Grab* A-955I7CRGXFV7AV Si SGP 27MAR",                debit:27.20,   credit:null,    date:"2026-03-28", icon:"ride" },
+        { id:19, name:"ATM Cash Deposit",         code:"CAM",   desc:"35999004,BEDOK CTL BR A",                             debit:null,    credit:1800.00, date:"2026-03-27", icon:"salary" },
+        { id:20, name:"Connoisseur Concerto",     code:"UMC-S", desc:"THE CONNOISSEUR CONCER SI SGP 22MAR",                 debit:40.29,   credit:null,    date:"2026-03-25", icon:"shop" },
+        { id:21, name:"IRAS",                     code:"IBG",   desc:"IRAS 4260707A S8179827C",                             debit:13.60,   credit:null,    date:"2026-03-23", icon:"util" },
+        { id:22, name:"WIX.COM",                  code:"UMC-S", desc:"WIX.COM 1230651821 SA USA 19MAR USD20.71",            debit:27.42,   credit:null,    date:"2026-03-20", icon:"sub" },
+        { id:23, name:"McDonald's",               code:"UMC-S", desc:"MCDONALD'S (BDML) SI SGP 17MAR",                     debit:25.10,   credit:null,    date:"2026-03-20", icon:"shop" },
+        { id:24, name:"NTUC FairPrice",           code:"UMC-S", desc:"FAIRPRICE FINEST - BED SI SGP 17MAR",                 debit:41.68,   credit:null,    date:"2026-03-19", icon:"shop" },
+        { id:25, name:"Salary Credit",            code:"SAL",   desc:"Salary - Singapore Sports Business Co.",              debit:null,    credit:18320.00,date:"2026-03-10", icon:"salary" },
+        { id:26, name:"ATM Cash Deposit",         code:"CAM",   desc:"35999004,IMM EBC 1",                                  debit:null,    credit:2000.00, date:"2026-03-13", icon:"salary" },
+        { id:27, name:"PayNow Transfer",          code:"ICT",   desc:"PayNow Transfer 7704947 To: TEO SAU SIONG",           debit:1850.00, credit:null,    date:"2026-03-13", icon:"shop" },
+        { id:28, name:"M&S - Vivo City",          code:"UMC-S", desc:"M & S - VIVO CITY SI SGP 08MAR",                     debit:57.80,   credit:null,    date:"2026-03-10", icon:"shop" },
+        { id:29, name:"ATM Cash Deposit",         code:"CAM",   desc:"35999004,BEDOK CTL BR B",                             debit:null,    credit:1900.00, date:"2026-03-06", icon:"salary" },
+        // February 2026
+        { id:30, name:"PayNow to Kirthiga",       code:"ICT",   desc:"PayNow Transfer 7011269 To: KIRTHIGA",               debit:500.00,  credit:null,    date:"2026-02-28", icon:"shop" },
+        { id:31, name:"BUS/MRT",                  code:"UMC-S", desc:"BUS/MRT 795424939 SI SGP 05FEB",                     debit:21.60,   credit:null,    date:"2026-02-13", icon:"smrt" },
+        { id:32, name:"Salary Credit",            code:"SAL",   desc:"Salary - Singapore Sports Business Co.",              debit:null,    credit:18320.00,date:"2026-02-10", icon:"salary" },
+        { id:33, name:"Amazon",                   code:"UMC-S", desc:"Online Shopping",                                    debit:36.95,   credit:null,    date:"2026-02-09", icon:"shop" },
+        { id:34, name:"Grab",                     code:"UMC-S", desc:"Ride-hailing service",                               debit:15.30,   credit:null,    date:"2026-02-07", icon:"ride" },
+        { id:35, name:"NTUC FairPrice",           code:"UMC-S", desc:"NTUC FP-WLDS CIVIC PLZ SI SGP 02FEB",                debit:70.89,   credit:null,    date:"2026-02-05", icon:"shop" },
+        { id:36, name:"IRAS",                     code:"IBG",   desc:"IRAS 4260707A S8179827C",                             debit:13.60,   credit:null,    date:"2026-02-05", icon:"util" },
+      ];
+
+      const recipients = [
+        { name:"Rajasekhar",         acc:"59119550665259", bank:"INR, HDFC BANK",              type:"remit",  fav:false, created: Date.now()-1000 },
+        { name:"Nuthi Hareesh",      acc:"012-7-027379",   bank:"DBS Savings Account",          type:"local",  fav:false, created: Date.now()-2000 },
+        { name:"Kirthiga",           acc:"+65 91809054",   bank:"Mobile",                       type:"paynow", fav:true,  created: Date.now()-3000 },
+        { name:"Ramesh-Tenant",      acc:"002-2-090043",   bank:"DBS Savings Plus Account",     type:"local",  fav:false, created: Date.now()-4000 },
+        { name:"Canyon Bicycles GmbH", acc:"DE79600501017482379008", bank:"EUR, BADEN-WUERTT...", type:"remit", fav:false, created: Date.now()-5000 },
+        { name:"Phani Tathineni",    acc:"291007472372",   bank:"USD, BANK OF AMERICA, N.A.",   type:"remit",  fav:true,  created: Date.now()-6000 },
+        { name:"Kishan",             acc:"033-45008-7",    bank:"POSB Passbook Savings Account",type:"local",  fav:false, created: Date.now()-7000 },
+      ];
+
+      localStorage.setItem("posb_transactions", JSON.stringify(txns));
+      localStorage.setItem("posb_recipients",   JSON.stringify(recipients));
+      localStorage.setItem("posb_balance",      "163000.83");
+      localStorage.setItem("posb_seeded",       SEED_VERSION);
+    }
+  }
+
+  function hardReset(){
+    localStorage.clear();
+    sessionStorage.clear();
+    showToast('Demo data reset! Reloading…', 'success');
+    setTimeout(() => location.reload(), 800);
+  }
+
+  function showToast(msg, type=""){
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.className = "toast show" + (type ? " "+type : "");
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(()=>{ t.className="toast"; }, 2800);
+  }
+</script>
+</body>
+</html>
